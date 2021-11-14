@@ -2,6 +2,7 @@
 // for simulation only
 
 `timescale 1ns/1ps
+
 module testbench;
 
 reg clk;
@@ -15,14 +16,27 @@ riscv_top #(.SIM(1)) top(
     .led()
 );
 
+
+
 initial begin
   clk=0;
   rst=1;
-  repeat(50) #1 clk=!clk;
-  rst=0; 
-  forever #1 clk=!clk;
+  repeat(50) #1 clk=~clk;
+   rst=0; 
+  forever #1 clk=~clk;
 
   $finish;
 end
+
+
+
+
+
+initial begin
+  $dumpfile("cpu.vcd") ;
+  $dumpvars(0,testbench) ;
+end
+
+
 
 endmodule
