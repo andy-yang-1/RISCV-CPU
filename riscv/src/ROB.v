@@ -178,7 +178,7 @@ always @(posedge clk_in) begin
 
         end
 
-        if ( rob_inst[head] == `Instsb || rob_inst[head] == `Instsh || rob_inst[head] == `Instsw ) begin
+        if ( (rob_inst[head] == `Instsb || rob_inst[head] == `Instsh || rob_inst[head] == `Instsw) && rob_status[head] == 2 ) begin
                 enable_write <= 1 ;
                 head <= (head + 1 <= 16) ?  head + 1 : head - 15 ;
                 rob_status[head] <= 0 ;

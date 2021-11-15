@@ -64,7 +64,10 @@ always @(posedge clk_in) begin
         if (fetch_rdy == 1) begin
             to_rs1 <= up_rs1 ;
             to_rs2 <= up_rs2 ;
-            to_rd <= up_rd ;
+            if ( up_rd_in_need == 1 )
+                to_rd <= up_rd ;
+            else
+                to_rd <= 0 ;
             to_rs1_in_need <= up_rs1_in_need ;
             to_rs2_in_need <= up_rs2_in_need ;
             to_rd_in_need <= up_rd_in_need ;

@@ -187,7 +187,7 @@ always @(posedge clk_in) begin
                     `Instlh: begin
                         case(data_cnt)
                         1: begin
-                            to_lmd_output <= {LMDCollect[31:8],mem_byte} ;
+                            to_lmd_output <= {{17{mem_byte[7:7]}},mem_byte[6:0],LMDCollect[7:0]} ;
                             lsb_rdy <= 1 ;
                             to_tag_bus <= lsb_tag[head] ;
                             data_cnt <= 0 ;
@@ -196,7 +196,7 @@ always @(posedge clk_in) begin
                             LSB_mem_in_need <= 0 ;
                         end
                         2:begin
-                            LMDCollect[31:8] <= {{17{mem_byte[7:7]}},mem_byte[6:0]} ;
+                            LMDCollect[7:0] <= mem_byte ;
                             data_cnt <= 1 ;
                             LSB_mem_in_need <= 0 ;
                         end
@@ -211,7 +211,7 @@ always @(posedge clk_in) begin
                     `Instlw: begin
                         case (data_cnt)
                             1: begin
-                                to_lmd_output <= {LMDCollect[31:8],mem_byte} ;
+                                to_lmd_output <= {mem_byte,LMDCollect[23:0]} ;
                                 lsb_rdy <= 1 ;
                                 to_tag_bus <= lsb_tag[head] ;
                                 data_cnt <= 0 ;
@@ -220,20 +220,20 @@ always @(posedge clk_in) begin
                                 LSB_mem_in_need <= 0 ;
                             end 
                             2: begin
-                                LMDCollect[15:8] <= mem_byte ;
+                                LMDCollect[23:16] <= mem_byte ;
                                 data_cnt <= 1 ;
                                 LSB_mem_in_need <= 0 ;
                                 mem_wr <= 0 ;
                             end
                             3: begin
-                                LMDCollect[23:16] <= mem_byte ;
+                                LMDCollect[15:8] <= mem_byte ;
                                 data_cnt <= 2 ;
                                 req_addr <= req_addr + 1 ;
                                 LSB_mem_in_need <= 1 ;
                                 mem_wr <= 0 ;
                             end
                             4: begin
-                                LMDCollect[31:24] <= mem_byte ;
+                                LMDCollect[7:0] <= mem_byte ;
                                 data_cnt <= 3 ;
                                 req_addr <= req_addr + 1 ;
                                 LSB_mem_in_need <= 1 ;
@@ -267,7 +267,7 @@ always @(posedge clk_in) begin
                     `Instlhu: begin
                         case(data_cnt)
                         1: begin
-                            to_lmd_output <= {LMDCollect[31:8],mem_byte} ;
+                            to_lmd_output <= {{16{1'b0}},mem_byte,LMDCollect[7:0]} ;
                             lsb_rdy <= 1 ;
                             to_tag_bus <= lsb_tag[head] ;
                             data_cnt <= 0 ;
@@ -276,7 +276,7 @@ always @(posedge clk_in) begin
                             LSB_mem_in_need <= 0 ;
                         end
                         2:begin
-                            LMDCollect[31:8] <= {{16{1'b0}},mem_byte} ;
+                            LMDCollect[7:0] <= mem_byte ;
                             data_cnt <= 1 ;
                             LSB_mem_in_need <= 0 ;
                         end
@@ -308,7 +308,7 @@ always @(posedge clk_in) begin
                         end
                         2: begin
                             data_cnt <= 1 ;
-                            write_data <= LMDCollect[7:0] ;
+                            write_data <= LMDCollect[15:8] ;
                             LSB_mem_in_need <= 1 ;
                             mem_wr <= 1 ;
                             req_addr <= req_addr + 1 ;
@@ -327,21 +327,21 @@ always @(posedge clk_in) begin
                         end
                         2: begin
                             data_cnt <= 1 ;
-                            write_data <= LMDCollect[7:0] ;
+                            write_data <= LMDCollect[31:24] ;
                             LSB_mem_in_need <= 1 ;
                             mem_wr <= 1 ;
                             req_addr <= req_addr + 1 ;
                         end
                         3: begin
                             data_cnt <= 2 ;
-                            write_data <= LMDCollect[15:8] ;
+                            write_data <= LMDCollect[23:16] ;
                             LSB_mem_in_need <= 1 ;
                             mem_wr <= 1 ;
                             req_addr <= req_addr + 1 ;
                         end
                         4: begin
                             data_cnt <= 3 ;
-                            write_data <= LMDCollect[23:16] ;
+                            write_data <= LMDCollect[15:8] ;
                             LSB_mem_in_need <= 1 ;
                             mem_wr <= 1 ;
                             req_addr <= req_addr + 1 ;
@@ -388,11 +388,11 @@ always @(posedge clk_in) begin
                         end
                         `Instsh: begin
                             data_cnt <= 2 ;
-                            write_data <= lsb_rs2_val[head][15:8] ;
+                            write_data <= lsb_rs2_val[head][7:0] ;
                         end
                         `Instsw: begin
                             data_cnt <= 4 ;
-                            write_data <= lsb_rs2_val[head][31:24] ;
+                            write_data <= lsb_rs2_val[head][7:0] ;
                         end
                     endcase
                 end

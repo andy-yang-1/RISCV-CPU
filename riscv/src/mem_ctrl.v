@@ -25,6 +25,7 @@ module mem_ctrl (
     
     // to fetch
     output wire fetch_mem_rdy ,    
+    output wire IO_is_writing ,
     
     // to fetch & LSB 
     output wire[`ByteBus] mem_byte
@@ -42,6 +43,8 @@ assign fetch_mem_rdy = LSB_mem_in_need == 0 ;
 assign mem_dout = LSB_write_data ;
 
 assign mem_byte = mem_din ;
+
+assign IO_is_writing = LSB_mem_in_need == 1 && LSB_req_addr == 196608 && LSB_mem_wr == 1 ;
 
     
 endmodule

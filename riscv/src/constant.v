@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
 
 //`define debug_show
+//`define partial_show
 
 `define AddrBus         31:0
 `define InstBus         31:0 

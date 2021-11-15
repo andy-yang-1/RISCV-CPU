@@ -149,6 +149,7 @@ always @(*) begin
                     3'b111: to_inst = `Instandi ;
                     3'b001: to_inst = `Instslli ;
                     3'b101: begin
+                        to_imme = {{7{1'b0}},up_inst[24:20]} ;
                         case(up_inst[31:25])  // func7
                             7'b0000000: to_inst = `Instsrli ;
                             7'b0100000: to_inst = `Instsrai ;

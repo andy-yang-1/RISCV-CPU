@@ -58,6 +58,7 @@ wire [`ByteBus] LSB_mem_write_data ;
 wire LSB_mem_wr ;
 wire LSB_mem_in_need ;
 wire [`AddrBus] LSB_mem_req_addr ;
+wire IO_is_writing ;
 
 fetch fetch_part(
 
@@ -70,7 +71,7 @@ fetch fetch_part(
 
   .ROB_FULL(ROB_FULL),
   .RS_FULL(RS_FULL),
-  .mem_is_writing(LSB_mem_wr) ,
+  .IO_is_writing(IO_is_writing) ,
   .LSB_FULL(LSB_FULL),
 
   .mem_rdy(mem_fetch_rdy),
@@ -104,6 +105,7 @@ mem_ctrl mem_ctrl_part(
   .mem_wr(mem_wr),
 
   .fetch_mem_rdy(mem_fetch_rdy),
+  .IO_is_writing(IO_is_writing),
   .mem_byte(mem_byte)
 
 );
@@ -366,7 +368,16 @@ ROB ROB_part(
 );
 
 
+`ifdef partial_show
 
+always @(posedge clk_in) begin
+
+  if ( $time > 2000 )
+    $finish ;
+  
+end
+
+`endif
 
 
 

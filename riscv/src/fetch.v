@@ -16,7 +16,7 @@ module fetch (
 
     // from LSB
     input wire LSB_FULL ,
-    input wire mem_is_writing ,
+    input wire IO_is_writing ,
 
     // from MEM
     input wire mem_rdy ,
@@ -61,7 +61,7 @@ always @(posedge clk_in) begin
             last_valid <= 0 ;
         end else if ( ROB_FULL == 0 && RS_FULL == 0 && LSB_FULL == 0 ) begin
             last_valid <= mem_rdy ;
-            if ( last_valid == 1 && mem_is_writing == 0 ) begin
+            if ( last_valid == 1 && IO_is_writing == 0 ) begin
                 case(inst_cnt)
                     0:begin
                         InstCollect[7:0] <= mem_byte ;
@@ -92,7 +92,7 @@ always @(posedge clk_in) begin
                 req_addr <= req_addr + 1 ;
             end
             
-            if ( mem_is_writing == 1) begin
+            if ( IO_is_writing == 1) begin
                 req_addr <= req_addr - 1 ; 
             end
         end

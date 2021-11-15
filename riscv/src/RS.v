@@ -66,7 +66,7 @@ reg [`ImmediateBus] rs_imme[`RS_SIZE:0] ;
 
 reg [`RegValBus] rs_rs1_val[`RS_SIZE:0] ;
 reg [`ROBTagBus] rs_rs1_rely[`RS_SIZE:0] ;
-reg [`ROBTagBus] rs_rs2_val[`RS_SIZE:0] ;
+reg [`RegValBus] rs_rs2_val[`RS_SIZE:0] ;
 reg [`ROBTagBus] rs_rs2_rely[`RS_SIZE:0] ;
 
 reg [4:0] rs_size_cnt ;
@@ -220,7 +220,7 @@ always @(posedge clk_in) begin
             rs_rs1_val[empty_pos] <= rs1_val ;
             rs_rs1_rely[empty_pos] <= rs1_rely ;
             rs_rs2_val[empty_pos] <= rs2_val ;
-            rs_rs2_val[empty_pos] <= rs2_rely ;
+            rs_rs2_rely[empty_pos] <= rs2_rely ;
             rs_status[empty_pos] <= 2 ;
             rs_size_cnt <= rs_size_cnt + 1 ;
             if ( rs1_rely != 0 ) begin
