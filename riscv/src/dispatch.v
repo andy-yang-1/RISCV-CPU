@@ -21,6 +21,9 @@ module dispatch (
     input wire mem_in_need ,
     input wire [`ImmediateBus] up_imme ,
 
+    // from ROB 
+    input wire clear , // clear 时不可以 dispatch
+
     // to register & ROB
     output reg [`RegBus] to_rs1 , 
     output reg to_rs1_in_need ,
@@ -58,7 +61,7 @@ always @(posedge clk_in) begin
         dispatch_rs_rdy <= 0;
         dispatch_lsb_rdy <= 0 ;
         dispatch_rob_rdy <= 0 ;
-    if ( rst_in == 1 ) begin
+    if ( rst_in == 1 || clear == 1 ) begin
         ; 
     end else if ( rdy_in == 1 ) begin
         if (fetch_rdy == 1) begin

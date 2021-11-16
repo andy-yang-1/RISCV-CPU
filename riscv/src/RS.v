@@ -28,6 +28,11 @@ module RS (
     input wire [`ALUOutputBus] ROB_rs2_alu_output ,
     input wire [`LMDOutputBus] ROB_rs2_lmd_output ,
 
+    // from ROB (new commit line)
+    input wire ROB_write_reg_rdy ,
+    input wire [`RegValBus] ROB_write_val ,
+    input wire [`ROBTagBus] ROB_head_tag ,
+
     // from CDB
     input wire [`ALUOutputBus] CDB_RS_alu_output ,
     input wire [`ROBTagBus] CDB_RS_tag ,
@@ -69,7 +74,7 @@ reg [`ROBTagBus] rs_rs1_rely[`RS_SIZE:0] ;
 reg [`RegValBus] rs_rs2_val[`RS_SIZE:0] ;
 reg [`ROBTagBus] rs_rs2_rely[`RS_SIZE:0] ;
 
-reg [4:0] rs_size_cnt ;
+wire [4:0] rs_size_cnt ;
 
 wire [4:0] empty_pos = rs_status[1] == 0 ? 1 
                     : rs_status[2] == 0 ? 2
@@ -111,7 +116,11 @@ wire [4:0] valid_pos = rs_status[1] == 1 ? 1
 // 0 表示无可 issue
 
 
-assign RS_FULL = rs_size_cnt >= `RS_SIZE - 1 ;
+assign RS_FULL = rs_size_cnt >= `RS_SIZE - 3 ;
+
+assign rs_size_cnt = (rs_status[1] > 0) + (rs_status[2] > 0) + (rs_status[3]>0) + (rs_status[4]>0) + (rs_status[5] > 0) + (rs_status[6] > 0) + (rs_status[7] > 0) + (rs_status[8]>0) + (rs_status[9]>0) + (rs_status[10] > 0) + (rs_status[11] > 0) + (rs_status[12] > 0) + (rs_status[13]>0) + (rs_status[14]>0) + (rs_status[15]>0) + (rs_status[16] > 0)  ;
+
+wire [`ROBTagBus] ROB_real_head_tag = ROB_head_tag - 1 == 0 ? 16 : ROB_head_tag - 1 ;
 
 integer i = 0 ;
 
@@ -148,8 +157,7 @@ always @(posedge clk_in) begin
             rs_rs2_val[i] <= 0 ;           
             rs_rs2_rely[i] <= 0 ;                     
         end
-
-        rs_size_cnt <= 0 ;    
+   
 
     end else if ( rdy_in == 1 ) begin
 
@@ -178,7 +186,6 @@ always @(posedge clk_in) begin
             to_rs2_val <= rs_rs2_val[valid_pos] ; 
             to_imme <= rs_imme[valid_pos] ;
             to_tag_bus <= rs_tag[valid_pos] ;
-            rs_size_cnt <= rs_size_cnt - 1 ;
         end
 
         // clear tag
@@ -204,7 +211,17 @@ always @(posedge clk_in) begin
                         rs_rs2_val[i] <= CDB_LSB_lmd_output ;
                     end
                 end
-                if ( (rs_rs1_rely[i] == 0 ||( rs_rdy == 1 && rs_rs1_rely[i] == CDB_RS_tag )|| ( CDB_LSB_rdy == 1 && rs_rs1_rely[i] == CDB_LSB_tag )) && (rs_rs2_rely[i] == 0 ||( rs_rdy == 1 && rs_rs2_rely[i] == CDB_RS_tag )|| ( CDB_LSB_rdy == 1 && rs_rs2_rely[i] == CDB_LSB_tag )) ) begin
+                if ( ROB_write_reg_rdy == 1  ) begin
+                    if ( rs_rs1_rely[i] == ROB_real_head_tag && rs_rs1_rely[i] != 0) begin
+                        rs_rs1_rely[i] <= 0 ;
+                        rs_rs1_val[i] <= ROB_write_val ;
+                    end
+                    if ( rs_rs2_rely[i] == ROB_real_head_tag && rs_rs2_rely[i] != 0) begin
+                        rs_rs2_rely[i] <= 0 ;
+                        rs_rs2_val[i] <= ROB_write_val ;
+                    end
+                end
+                if ( (rs_rs1_rely[i] == 0 ||( rs_rdy == 1 && rs_rs1_rely[i] == CDB_RS_tag )|| ( CDB_LSB_rdy == 1 && rs_rs1_rely[i] == CDB_LSB_tag ) || (ROB_write_reg_rdy == 1 && rs_rs1_rely[i] == ROB_real_head_tag)) && (rs_rs2_rely[i] == 0 ||( rs_rdy == 1 && rs_rs2_rely[i] == CDB_RS_tag )|| ( CDB_LSB_rdy == 1 && rs_rs2_rely[i] == CDB_LSB_tag )|| (ROB_write_reg_rdy == 1 && rs_rs2_rely[i] == ROB_real_head_tag)) ) begin
                     rs_status[i] <= 1 ; // 表示 rs1 和 rs2 都清除了依赖关系
                 end
             end
@@ -222,7 +239,6 @@ always @(posedge clk_in) begin
             rs_rs2_val[empty_pos] <= rs2_val ;
             rs_rs2_rely[empty_pos] <= rs2_rely ;
             rs_status[empty_pos] <= 2 ;
-            rs_size_cnt <= rs_size_cnt + 1 ;
             if ( rs1_rely != 0 ) begin
                 // CDB request
                 if ( rs_rdy == 1 && rs1_rely == CDB_RS_tag ) begin // rdy 位被清空了无法被有效截取

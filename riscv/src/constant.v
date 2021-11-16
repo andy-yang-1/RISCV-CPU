@@ -1,7 +1,8 @@
 `timescale 1ns/1ps
 
 //`define debug_show
-//`define partial_show
+//`define partial_show    1000000
+`define I_cache_added
 
 `define AddrBus         31:0
 `define InstBus         31:0 
@@ -15,6 +16,7 @@
 `define RS_SIZE         16
 `define LSB_SIZE        16
 `define ROB_SIZE        16
+`define I_cache_size    128
 
 `define LayerStatusBus  1:0
 

@@ -46,7 +46,7 @@ module ROB (
     output wire [`ALUOutputBus] ROB_rs2_alu_output ,
     output wire [`LMDOutputBus] ROB_rs2_lmd_output ,
 
-    // to register
+    // to register & RS & LSB 
     output reg[`RegValBus] write_val ,
     output reg write_rdy ,
     output wire[`ROBTagBus] head_tag ,
@@ -67,7 +67,7 @@ wire [4:0] rob_size_cnt ;
 reg [4:0] head ; // 执行结束弹出队首
 wire [6:0] rear ; // 采用组合方法实时计算 rear
 
-assign ROB_FULL = rob_size_cnt >= `ROB_SIZE - 1 ;
+assign ROB_FULL = rob_size_cnt >= `ROB_SIZE - 3 ;
 
 reg [`InstBus] rob_inst[`ROB_SIZE:0] ; // inst type
 reg [2:0] rob_status[`ROB_SIZE:0] ; // 0 -> empty 1 -> valid 2 -> invalid 
@@ -172,8 +172,10 @@ always @(posedge clk_in) begin
             rob_status[head] <= 0 ;
             to_pc <= rob_new_npc[head] ;
 
-`ifdef debug_show            
-       //     $display("to pc: %d rob_npc: %d rob_new_npc: %d",to_pc,rob_npc[head],rob_new_npc[head]) ;
+`ifdef debug_show     
+             if (  rob_npc[head] == 5216  ) begin
+                $display("time: %d",$time) ;
+             end      
 `endif
 
         end
@@ -201,7 +203,7 @@ always @(posedge clk_in) begin
         
 
         // settle dispatch
-        if ( dispatch_rdy == 1) begin
+        if ( dispatch_rdy == 1 && clear == 0 ) begin
             rob_inst[rear] <= up_inst ;
             rob_npc[rear] <= up_npc ;
             rob_rd[rear] <= up_rd ;

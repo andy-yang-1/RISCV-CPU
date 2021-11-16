@@ -167,6 +167,7 @@ dispatch dispatch_part(
   .up_rd_in_need    (decode_dispatch_rd_in_need    ),
   .mem_in_need      (decode_dispatch_mem_in_need     ),
   .up_imme          (decode_dispatch_imme          ),
+  .clear (clear),
   .to_rs1           (dispatch_reg_rs1           ),
   .to_rs1_in_need   (dispatch_reg_rs1_in_need   ),
   .to_rs2           (dispatch_reg_rs2          ),
@@ -254,6 +255,9 @@ RS RS_part(
   .ROB_rs2_mem_in_need (ROB_rs2_mem_in_need ),
   .ROB_rs2_alu_output  (ROB_rs2_alu_output  ),
   .ROB_rs2_lmd_output  (ROB_rs2_lmd_output  ),
+  .ROB_write_reg_rdy(ROB_reg_write_rdy),
+  .ROB_write_val(ROB_reg_write_val),
+  .ROB_head_tag(now_tag),
   .CDB_RS_alu_output   (CDB_RS_alu_output   ),
   .CDB_RS_tag          (CDB_RS_tag          ),
   .CDB_LSB_lmd_output  (CDB_LSB_lmd_output  ),
@@ -293,6 +297,9 @@ LSB LSB_part(
   .ROB_rs2_mem_in_need (ROB_rs2_mem_in_need ),
   .ROB_rs2_alu_output  (ROB_rs2_alu_output  ),
   .ROB_rs2_lmd_output  (ROB_rs2_lmd_output  ),
+  .ROB_write_reg_rdy(ROB_reg_write_rdy),
+  .ROB_write_val(ROB_reg_write_val),
+  .ROB_head_tag(now_tag),
   .CDB_RS_alu_output   (CDB_RS_alu_output   ),
   .CDB_RS_tag          (CDB_RS_tag          ),
   .CDB_LSB_lmd_output  (CDB_LSB_lmd_output  ),
@@ -372,8 +379,11 @@ ROB ROB_part(
 
 always @(posedge clk_in) begin
 
-  if ( $time > 2000 )
+  if ( $time > `partial_show )
     $finish ;
+  // if ( ($time % `partial_show) == 1 ) begin
+  //   $display("time: %d",$time);
+  // end
   
 end
 

@@ -29,6 +29,11 @@ module LSB (
     input wire [`ALUOutputBus] ROB_rs2_alu_output ,
     input wire [`LMDOutputBus] ROB_rs2_lmd_output ,
 
+    // from ROB (new commit line)
+    input wire ROB_write_reg_rdy ,
+    input wire [`RegValBus] ROB_write_val ,
+    input wire [`ROBTagBus] ROB_head_tag ,
+
     // from CDB
     input wire [`ALUOutputBus] CDB_RS_alu_output ,
     input wire [`ROBTagBus] CDB_RS_tag ,
@@ -73,7 +78,7 @@ wire [6:0] rear ; // 采用组合方法实时计算 rear
 wire [4:0] commit_size_cnt ;
 wire [4:0] next_commit ;
 
-assign LSB_FULL = lsb_size_cnt >= `LSB_SIZE - 1 ;
+assign LSB_FULL = lsb_size_cnt >= `LSB_SIZE - 3 ;
 
 
 reg [`InstBus] lsb_inst[`LSB_SIZE:0] ; // inst type
@@ -91,6 +96,8 @@ assign lsb_size_cnt = (lsb_status[0] > 0) + (lsb_status[1] > 0) + (lsb_status[2]
 assign commit_size_cnt = (lsb_status[0] == 3) + (lsb_status[1] == 3) + (lsb_status[2] == 3) + (lsb_status[3]== 3) + (lsb_status[4]== 3) + (lsb_status[5] == 3) + (lsb_status[6] == 3) + (lsb_status[7]== 3) + (lsb_status[8]== 3) + (lsb_status[9]== 3) + (lsb_status[10] == 3) + (lsb_status[11] == 3) + (lsb_status[12]== 3) + (lsb_status[13]== 3) + (lsb_status[14]== 3) + (lsb_status[15]== 3) ;
 assign rear = ( head + lsb_size_cnt ) % 16 ; 
 assign next_commit = ( head + commit_size_cnt ) % 16 ;
+
+wire [`ROBTagBus] ROB_real_head_tag = ROB_head_tag - 1 == 0 ? 16 : ROB_head_tag - 1 ;
 
 integer i = 0 ;
 
@@ -352,11 +359,11 @@ always @(posedge clk_in) begin
                 endcase 
             end else begin // issue
 
-`ifdef debug_show  
+// `ifdef debug_show  
 
-            $display("head: %d rear: %d lsb_inst[head]: %d lsb_status[head]: %d data_cnt: %d",head,rear,req_addr,LMDCollect,data_cnt) ;
+//             $display("head: %d rear: %d lsb_inst[head]: %d lsb_status[head]: %d data_cnt: %d",head,rear,req_addr,LMDCollect,data_cnt) ;
 
-`endif            
+// `endif            
 
                 if ( lsb_status[head] == 1 ) begin                   
                    
@@ -421,13 +428,23 @@ always @(posedge clk_in) begin
                         lsb_rs2_val[i] <= CDB_RS_alu_output ;
                     end
                 end
-                if ( (lsb_rs1_rely[i] == 0 ||( lsb_rdy == 1 && lsb_rs1_rely[i] == CDB_LSB_tag )|| ( CDB_RS_rdy == 1 && lsb_rs1_rely[i] == CDB_RS_tag )) && (lsb_rs2_rely[i] == 0 ||( lsb_rdy == 1 && lsb_rs2_rely[i] == CDB_LSB_tag )|| ( CDB_RS_rdy == 1 && lsb_rs2_rely[i] == CDB_RS_tag )) ) begin
+                if ( ROB_write_reg_rdy == 1  ) begin
+                    if ( lsb_rs1_rely[i] == ROB_real_head_tag && lsb_rs1_rely[i] != 0) begin
+                        lsb_rs1_rely[i] <= 0 ;
+                        lsb_rs1_val[i] <= ROB_write_val ;
+                    end
+                    if ( lsb_rs2_rely[i] == ROB_real_head_tag && lsb_rs2_rely[i] != 0) begin
+                        lsb_rs2_rely[i] <= 0 ;
+                        lsb_rs2_val[i] <= ROB_write_val ;
+                    end
+                end
+                if ( (lsb_rs1_rely[i] == 0 ||( lsb_rdy == 1 && lsb_rs1_rely[i] == CDB_LSB_tag )|| ( CDB_RS_rdy == 1 && lsb_rs1_rely[i] == CDB_RS_tag ) || ( ROB_write_reg_rdy == 1 && lsb_rs1_rely[i] == ROB_real_head_tag)) && (lsb_rs2_rely[i] == 0 ||( lsb_rdy == 1 && lsb_rs2_rely[i] == CDB_LSB_tag )|| ( CDB_RS_rdy == 1 && lsb_rs2_rely[i] == CDB_RS_tag )|| ( ROB_write_reg_rdy == 1 && lsb_rs2_rely[i] == ROB_real_head_tag)) ) begin
                     lsb_status[i] <= 1 ; // 表示 rs1 和 rs2 都清除了依赖关系
                 end
             end
 
             // settle dispatch
-            if ( dispatch_rdy == 1 ) begin
+            if ( dispatch_rdy == 1 && clear == 0) begin
                 lsb_inst[rear] <= up_inst ; 
                 lsb_tag[rear] <= next_tag ;
                 lsb_npc[rear] <= up_npc ;

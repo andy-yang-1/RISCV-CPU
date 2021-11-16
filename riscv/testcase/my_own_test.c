@@ -1,44 +1,31 @@
 #include "io.h"
-// Target: qsort
-// Possible optimization: Dead code elimination, common expression, strength reduction
-// REMARKS: nothing.
-//
-//
-
-int a[10100];
-int n = 100;
-
-int qsrt(int l, int r) {
-    int i = l;
-    int j = r;
-    int x = a[(l + r) / 2];
-    while (i <= j) {
-        while (a[i] < x) i++;
-        while (a[j] > x) j--;
-        if (i <= j) {
-            int temp = a[i];
-            a[i] = a[j];
-            a[j] = temp;
-            i++;
-            j--;
-        }
+int cd(int d, char* a, char* b, char* c, int sum) {
+//    sleep(5); // to prevent UART buffer from overflowing
+    if (d == 1) {
+        print("move ");
+        print(a);
+        print(" --> ");
+        println(c);
+        sum++;
+    } else {
+        sum = cd(d - 1, a, c, b, sum);
+        print("move ");
+        print(a);
+        print(" --> ");
+        println(c);
+        sum = cd(d - 1, b, a, c, sum);
+        sum++;
     }
-    if (l < j) qsrt(l, j);
-    if (i < r) qsrt(i, r);
-    return 0;
+    return sum;
 }
 
 int main() {
-    int i;
-    for (i = 1; i <= n; i++)
-        a[i] = n + 1 - i;
-    qsrt(1, n);
-    for (i = 1; i <= n; i++) {
-		outl(a[i]);
-		print(" ");
-        sleep(1); // to prevent UART buffer from overflowing
-	}
-    print("\n");
+    char a[5] = "A";
+	char b[5] = "B";
+	char c[5] = "C";
+    int d = 3;
+    int sum = cd(d, a, b, c, 0);
+    outlln(sum);
     return 0;
 }
 
