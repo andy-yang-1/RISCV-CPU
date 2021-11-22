@@ -44,7 +44,6 @@ module LSB (
     // from dispatch
     input wire dispatch_rdy ,
     input wire[`InstBus] up_inst ,
-    input wire[`AddrBus] up_npc ,
     input wire [`ImmediateBus] up_imme ,
 
     // from MEM 
@@ -73,7 +72,7 @@ reg [`LMDOutputBus] LMDCollect ; // 用 mem_in_need 看工作状态 mem_wr 看�
 
 wire [4:0] lsb_size_cnt ;
 reg [4:0] head ; // 执行结束弹出队首
-wire [6:0] rear ; // 采用组合方法实时计算 rear
+wire [4:0] rear ; // 采用组合方法实时计算 rear
 
 wire [4:0] commit_size_cnt ;
 wire [4:0] next_commit ;
@@ -84,12 +83,11 @@ assign LSB_FULL = lsb_size_cnt >= `LSB_SIZE - 3 ;
 reg [`InstBus] lsb_inst[`LSB_SIZE:0] ; // inst type
 reg [`ROBTagBus] lsb_tag[`LSB_SIZE:0] ;
 reg [2:0] lsb_status[`LSB_SIZE:0] ; // 0 -> empty 1 -> valid 2 -> invalid 3 -> write commit
-reg [`AddrBus] lsb_npc[`LSB_SIZE:0] ;
 reg [`ImmediateBus] lsb_imme[`LSB_SIZE:0] ;
 
 reg [`RegValBus] lsb_rs1_val[`LSB_SIZE:0] ;
-reg [`ROBTagBus] lsb_rs1_rely[`LSB_SIZE:0] ;
-reg [`RegValBus] lsb_rs2_val[`LSB_SIZE:0] ;
+reg [`ROBTagBus] lsb_rs1_rely[`LSB_SIZE-1:0] ;
+reg [`RegValBus] lsb_rs2_val[`LSB_SIZE-1:0] ;
 reg [`ROBTagBus] lsb_rs2_rely[`LSB_SIZE:0] ;
 
 assign lsb_size_cnt = (lsb_status[0] > 0) + (lsb_status[1] > 0) + (lsb_status[2] > 0) + (lsb_status[3]>0) + (lsb_status[4]>0) + (lsb_status[5] > 0) + (lsb_status[6] > 0) + (lsb_status[7] > 0) + (lsb_status[8]>0) + (lsb_status[9]>0) + (lsb_status[10] > 0) + (lsb_status[11] > 0) + (lsb_status[12] > 0) + (lsb_status[13]>0) + (lsb_status[14]>0) + (lsb_status[15]>0) ;
@@ -129,7 +127,7 @@ always @(posedge clk_in) begin
     $fdisplay(lsb_log,"head: %d rear: %d req_addr: %d LMDCollect: %d data_cnt: %d",head,rear,req_addr,LMDCollect,data_cnt) ;
 
     for ( i = 0 ; i < 16 ; i = i + 1 ) begin
-        $fdisplay(lsb_log,"i: %d inst: %d npc: %d status: %d tag: %d rs1_rely: %d rs2_rely: %d rs2_val: %d",i,lsb_inst[i],lsb_npc[i],lsb_status[i],lsb_tag[i],lsb_rs1_rely[i],lsb_rs2_rely[i],lsb_rs2_val[i]) ;
+        $fdisplay(lsb_log,"i: %d inst: %d status: %d tag: %d rs1_rely: %d rs2_rely: %d rs2_val: %d",i,lsb_inst[i],lsb_status[i],lsb_tag[i],lsb_rs1_rely[i],lsb_rs2_rely[i],lsb_rs2_val[i]) ;
     end
     $fdisplay(lsb_log,"<------------------------------->") ;
 
@@ -142,7 +140,6 @@ always @(posedge clk_in) begin
             lsb_inst[i] <= 0 ;
             lsb_tag[i] <= 0 ;
             lsb_status[i] <= 0 ;
-            lsb_npc[i] <= 0 ;
             lsb_imme[i] <= 0 ;
             lsb_rs1_val[i] <= 0 ;
             lsb_rs1_rely[i] <= 0 ;
@@ -447,7 +444,6 @@ always @(posedge clk_in) begin
             if ( dispatch_rdy == 1 && clear == 0) begin
                 lsb_inst[rear] <= up_inst ; 
                 lsb_tag[rear] <= next_tag ;
-                lsb_npc[rear] <= up_npc ;
                 lsb_imme[rear] <= up_imme ;
                 lsb_rs1_val[rear] <= rs1_val ;
                 lsb_rs1_rely[rear] <= rs1_rely ;

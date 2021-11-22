@@ -31,12 +31,12 @@ end
 
 
 
-
+`ifdef debug_show
 initial begin
   $dumpfile("cpu.vcd") ;
   $dumpvars(0,testbench) ;
 end
 
-
+`endif
 
 endmodule

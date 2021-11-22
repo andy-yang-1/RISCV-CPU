@@ -65,8 +65,8 @@ always @(posedge clk_in) begin
         end else if ( ROB_FULL == 0 && RS_FULL == 0 && LSB_FULL == 0 ) begin 
         
 `ifdef I_cache_added
-            if ( inst_cnt == 0 && pc == cache_addr[pc[6:0]] && pc != 0 ) begin
-                inst <= I_cache_Inst[pc[6:0]] ;
+            if ( inst_cnt == 0 && pc == cache_addr[pc[5:0]] && pc != 0 ) begin
+                inst <= I_cache_Inst[pc[5:0]] ;
                 fetch_rdy <= 1 ;
                 pc <= pc + 4 ;
                 npc <= pc + 4 ;
@@ -95,8 +95,8 @@ always @(posedge clk_in) begin
                         3:begin
                             inst <= {mem_byte,InstCollect[23:0]} ;
 `ifdef I_cache_added
-                            cache_addr[pc[6:0]-3] <= pc - 3 ;
-                            I_cache_Inst[pc[6:0]-3] <= {mem_byte,InstCollect[23:0]} ;
+                            cache_addr[pc[5:0]-3] <= pc - 3 ;
+                            I_cache_Inst[pc[5:0]-3] <= {mem_byte,InstCollect[23:0]} ;
 `endif
 `ifdef debug_show
                             if ( pc == 5215 ) begin

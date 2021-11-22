@@ -22,9 +22,13 @@ module regFile (
     input wire [`RegBus] rd , 
     input wire write_rdy , 
 
+`ifdef debug_show    
+
     // ROB debug pulse 
     input wire commit_pulse ,
     input wire [`AddrBus] commit_pc ,
+
+`endif
 
     // to RS & LSB & ROB
     output reg [`RegValBus] rs1_val , 

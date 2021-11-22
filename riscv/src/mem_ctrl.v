@@ -44,7 +44,7 @@ assign mem_dout = LSB_write_data ;
 
 assign mem_byte = mem_din ;
 
-assign IO_is_writing = LSB_mem_in_need == 1 && LSB_req_addr == 196608 && LSB_mem_wr == 1 ;
+assign IO_is_writing = LSB_mem_in_need == 1 &&( LSB_req_addr == 196608 || LSB_req_addr == 196612 ) ;
 
     
 endmodule

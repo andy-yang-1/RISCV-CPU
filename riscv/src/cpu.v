@@ -207,8 +207,12 @@ regFile regFile_part(
   .write_val           (ROB_reg_write_val           ),
   .rd                  (ROB_reg_rd                   ),
   .write_rdy           (ROB_reg_write_rdy           ),
+
+`ifdef debug_show  
   .commit_pulse        (commit_pulse        ),
   .commit_pc            ( ROB_fetch_next_pc ) ,
+`endif  
+
   .rs1_val             (rs1_val             ),
   .rs1_rely            (rs1_rely            ),
   .rs2_val             (rs2_val             ),
@@ -307,7 +311,6 @@ LSB LSB_part(
   .CDB_RS_rdy          (rs_rdy          ),
   .dispatch_rdy        (dispatch_lsb_rdy        ),
   .up_inst             (dispatch_down_inst             ),
-  .up_npc              (dispatch_down_npc              ),
   .up_imme             (dispatch_down_imme             ),
   .mem_byte            (mem_byte            ),
   .req_addr            (LSB_mem_req_addr            ),

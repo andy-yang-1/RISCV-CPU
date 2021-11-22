@@ -65,7 +65,7 @@ module ROB (
 
 wire [4:0] rob_size_cnt ;
 reg [4:0] head ; // 执行结束弹出队首
-wire [6:0] rear ; // 采用组合方法实时计算 rear
+wire [4:0] rear ; // 采用组合方法实时计算 rear
 
 assign ROB_FULL = rob_size_cnt >= `ROB_SIZE - 3 ;
 
@@ -209,20 +209,6 @@ always @(posedge clk_in) begin
             rob_rd[rear] <= up_rd ;
             rob_status[rear] <= 2 ;
             rob_new_npc[rear] <= up_npc ; // 防止为清空同时是 ls 操作导致跳转
-
-// `ifdef debug_show
-
-//     $fdisplay(rob_log,"<------------------------------->") ;
-//     $fdisplay(rob_log,"head: %d rear: %d",head,rear) ;
-
-//     for ( i = 1 ; i <= 16 ; i = i + 1 ) begin
-//         $fdisplay(rob_log,"i: %d inst: %d npc: %d status: %d new npc: %d alu: %d lmd: %d",i,rob_inst[i],rob_npc[i],rob_status[i],rob_new_npc[i],rob_alu_output[i],rob_lmd_output[i]) ;
-//     end
-//     $fdisplay(rob_log,"<------------------------------->") ;
-
-// `endif
-
-
         end
 
     end
