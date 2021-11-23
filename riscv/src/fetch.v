@@ -55,6 +55,7 @@ always @(posedge clk_in) begin
         last_valid <= 0 ; // cache addr 不应该清 0 将他当成 dirty
 
     end else if ( rdy_in == 1 ) begin
+    
         fetch_rdy <= 0 ;
         if ( change_pc == 1 ) begin
             inst_cnt <= 0 ;

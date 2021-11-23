@@ -222,12 +222,10 @@ regFile regFile_part(
 // CDB
 wire ROB_rs1_valid ;
 wire ROB_rs1_mem_in_need ;
-wire [`ALUOutputBus] ROB_rs1_alu_output ;
-wire [`LMDOutputBus] ROB_rs1_lmd_output ;
+wire [`ALUOutputBus] ROB_rs1_ans_output ;
 wire ROB_rs2_valid ;
-wire ROB_rs2_mem_in_need ;
-wire [`ALUOutputBus] ROB_rs2_alu_output ;
-wire [`LMDOutputBus] ROB_rs2_lmd_output ;    
+wire [`ALUOutputBus] ROB_rs2_ans_output ;
+   
 wire [`ALUOutputBus] CDB_RS_alu_output ;
 wire [`ROBTagBus] CDB_RS_tag ;
 wire [`ROBTagBus] CDB_LSB_tag ;
@@ -252,21 +250,12 @@ RS RS_part(
   .next_tag            (next_tag            ),
   .clear               (clear               ),
   .ROB_rs1_valid       (ROB_rs1_valid       ),
-  .ROB_rs1_mem_in_need (ROB_rs1_mem_in_need ),
-  .ROB_rs1_alu_output  (ROB_rs1_alu_output  ),
-  .ROB_rs1_lmd_output  (ROB_rs1_lmd_output  ),
+  .ROB_rs1_ans_output  (ROB_rs1_ans_output  ),
   .ROB_rs2_valid       (ROB_rs2_valid       ),
-  .ROB_rs2_mem_in_need (ROB_rs2_mem_in_need ),
-  .ROB_rs2_alu_output  (ROB_rs2_alu_output  ),
-  .ROB_rs2_lmd_output  (ROB_rs2_lmd_output  ),
+  .ROB_rs2_ans_output  (ROB_rs2_ans_output  ),
   .ROB_write_reg_rdy(ROB_reg_write_rdy),
   .ROB_write_val(ROB_reg_write_val),
   .ROB_head_tag(now_tag),
-  .CDB_RS_alu_output   (CDB_RS_alu_output   ),
-  .CDB_RS_tag          (CDB_RS_tag          ),
-  .CDB_LSB_lmd_output  (CDB_LSB_lmd_output  ),
-  .CDB_LSB_tag         (CDB_LSB_tag         ),
-  .CDB_LSB_rdy         (lsb_rdy         ),
   .dispatch_rdy        (dispatch_rs_rdy        ),
   .up_inst             (dispatch_down_inst             ),
   .up_npc              (dispatch_down_npc             ),
@@ -294,21 +283,12 @@ LSB LSB_part(
   .enable_write        (ROB_LSB_enable_write        ),
   .clear               (clear               ),
   .ROB_rs1_valid       (ROB_rs1_valid       ),
-  .ROB_rs1_mem_in_need (ROB_rs1_mem_in_need ),
-  .ROB_rs1_alu_output  (ROB_rs1_alu_output  ),
-  .ROB_rs1_lmd_output  (ROB_rs1_lmd_output  ),
+  .ROB_rs1_ans_output  (ROB_rs1_ans_output  ),
   .ROB_rs2_valid       (ROB_rs2_valid       ),
-  .ROB_rs2_mem_in_need (ROB_rs2_mem_in_need ),
-  .ROB_rs2_alu_output  (ROB_rs2_alu_output  ),
-  .ROB_rs2_lmd_output  (ROB_rs2_lmd_output  ),
+  .ROB_rs2_ans_output  (ROB_rs2_ans_output  ),
   .ROB_write_reg_rdy(ROB_reg_write_rdy),
   .ROB_write_val(ROB_reg_write_val),
   .ROB_head_tag(now_tag),
-  .CDB_RS_alu_output   (CDB_RS_alu_output   ),
-  .CDB_RS_tag          (CDB_RS_tag          ),
-  .CDB_LSB_lmd_output  (CDB_LSB_lmd_output  ),
-  .CDB_LSB_tag         (CDB_LSB_tag         ),
-  .CDB_RS_rdy          (rs_rdy          ),
   .dispatch_rdy        (dispatch_lsb_rdy        ),
   .up_inst             (dispatch_down_inst             ),
   .up_imme             (dispatch_down_imme             ),
@@ -361,13 +341,9 @@ ROB ROB_part(
   .clear               (clear               ),
   .enable_write        (ROB_LSB_enable_write        ),
   .ROB_rs1_valid       (ROB_rs1_valid       ),
-  .ROB_rs1_mem_in_need (ROB_rs1_mem_in_need ),
-  .ROB_rs1_alu_output  (ROB_rs1_alu_output  ),
-  .ROB_rs1_lmd_output  (ROB_rs1_lmd_output  ),
+  .ROB_rs1_ans_output  (ROB_rs1_ans_output  ),
   .ROB_rs2_valid       (ROB_rs2_valid       ),
-  .ROB_rs2_mem_in_need (ROB_rs2_mem_in_need ),
-  .ROB_rs2_alu_output  (ROB_rs2_alu_output  ),
-  .ROB_rs2_lmd_output  (ROB_rs2_lmd_output  ),
+  .ROB_rs2_ans_output  (ROB_rs2_ans_output  ),
   .write_val           (ROB_reg_write_val           ),
   .write_rdy           (ROB_reg_write_rdy           ),
   .head_tag            (now_tag            ),

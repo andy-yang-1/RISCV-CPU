@@ -36,15 +36,11 @@ module ROB (
 
     // to RS & LSB tag1
     output wire ROB_rs1_valid ,
-    output wire ROB_rs1_mem_in_need ,
-    output wire [`ALUOutputBus] ROB_rs1_alu_output ,
-    output wire [`LMDOutputBus] ROB_rs1_lmd_output ,
+    output wire [`ALUOutputBus] ROB_rs1_ans_output ,
 
     // to RS & LSB tag2
     output wire ROB_rs2_valid ,
-    output wire ROB_rs2_mem_in_need ,
-    output wire [`ALUOutputBus] ROB_rs2_alu_output ,
-    output wire [`LMDOutputBus] ROB_rs2_lmd_output ,
+    output wire [`ALUOutputBus] ROB_rs2_ans_output ,
 
     // to register & RS & LSB 
     output reg[`RegValBus] write_val ,
@@ -75,24 +71,21 @@ reg [`AddrBus] rob_npc[`ROB_SIZE:0] ;
 reg [`AddrBus] rob_new_npc[`ROB_SIZE:0] ;
 
 reg [`RegBus] rob_rd[`ROB_SIZE:0] ;
-reg [`ALUOutputBus] rob_alu_output[`ROB_SIZE:0] ;
-reg [`LMDOutputBus] rob_lmd_output[`ROB_SIZE:0] ;
+// reg [`ALUOutputBus] rob_alu_output[`ROB_SIZE:0] ;
+// reg [`LMDOutputBus] rob_lmd_output[`ROB_SIZE:0] ;
+reg [`ALUOutputBus] rob_ans_output[`ROB_SIZE:0] ;
 
 assign rob_size_cnt = (rob_status[1] > 0) + (rob_status[2] > 0) + (rob_status[3]>0) + (rob_status[4]>0) + (rob_status[5] > 0) + (rob_status[6] > 0) + (rob_status[7] > 0) + (rob_status[8]>0) + (rob_status[9]>0) + (rob_status[10] > 0) + (rob_status[11] > 0) + (rob_status[12] > 0) + (rob_status[13]>0) + (rob_status[14]>0) + (rob_status[15]>0) + (rob_status[16] > 0)  ;
 assign rear = (( head + rob_size_cnt ) <= 16) ? head + rob_size_cnt : head + rob_size_cnt - 16 ; 
 
 assign head_tag = head ;
-assign ROB_next_tag = rear[4:0] ;
+assign ROB_next_tag = rear ;
 
 assign ROB_rs1_valid = ( rs1_rely == 0 || rob_status[rs1_rely] == 1  ) ? 1 : 0 ;
-assign ROB_rs1_mem_in_need = ( rs1_rely != 0 && ( rob_inst[rs1_rely] == `Instlb || rob_inst[rs1_rely] == `Instlh || rob_inst[rs1_rely] == `Instlw || rob_inst[rs1_rely] == `Instlbu || rob_inst[rs1_rely] == `Instlhu  ) ) ? 1 : 0;
-assign ROB_rs1_alu_output = rob_alu_output[rs1_rely] ;
-assign ROB_rs1_lmd_output = rob_lmd_output[rs1_rely] ;
-
+assign ROB_rs1_ans_output = rob_ans_output[rs1_rely] ;
 assign ROB_rs2_valid = ( rs2_rely == 0 || rob_status[rs2_rely] == 1  ) ? 1 : 0 ;
-assign ROB_rs2_mem_in_need = ( rs2_rely != 0 && ( rob_inst[rs2_rely] == `Instlb || rob_inst[rs2_rely] == `Instlh || rob_inst[rs2_rely] == `Instlw || rob_inst[rs2_rely] == `Instlbu || rob_inst[rs2_rely] == `Instlhu  ) ) ? 1 : 0;
-assign ROB_rs2_alu_output = rob_alu_output[rs2_rely] ;
-assign ROB_rs2_lmd_output = rob_lmd_output[rs2_rely] ;
+assign ROB_rs2_ans_output = rob_ans_output[rs2_rely] ;
+
 
 integer i = 0 ;
 
@@ -124,7 +117,7 @@ always @(posedge clk_in) begin
     $fdisplay(rob_log,"head: %d rear: %d",head,rear) ;
 
     for ( i = 1 ; i <= 16 ; i = i + 1 ) begin
-        $fdisplay(rob_log,"i: %d inst: %d npc: %d status: %d new npc: %d rd: %d alu: %d lmd: %d",i,rob_inst[i],rob_npc[i],rob_status[i],rob_new_npc[i],rob_rd[i],rob_alu_output[i],rob_lmd_output[i]) ;
+        $fdisplay(rob_log,"i: %d inst: %d npc: %d status: %d new npc: %d rd: %d ans: %d",i,rob_inst[i],rob_npc[i],rob_status[i],rob_new_npc[i],rob_rd[i],rob_ans_output[i]) ;
     end
     $fdisplay(rob_log,"<------------------------------->") ;
 
@@ -141,8 +134,7 @@ always @(posedge clk_in) begin
             rob_status[i] <= 0 ;
             rob_npc[i] <= 0 ;
             rob_new_npc[i] <= 0 ;
-            rob_alu_output[i] <= 0 ;
-            rob_lmd_output[i] <= 0 ;
+            rob_ans_output[i] <= 0 ;
             rob_rd[i] <= 0 ;
         end
 
@@ -156,11 +148,7 @@ always @(posedge clk_in) begin
             if ( rob_rd[head] != 0 ) begin
                 write_rdy <= 1 ;
                 to_rd <= rob_rd[head] ;
-                if ( rob_inst[head] == `Instlb || rob_inst[head] == `Instlh || rob_inst[head] == `Instlw || rob_inst[head] == `Instlbu || rob_inst[head] == `Instlhu ) begin
-                    write_val <= rob_lmd_output[head] ;
-                end else begin
-                    write_val <= rob_alu_output[head] ;
-                end
+                write_val <= rob_ans_output[head] ;
             end
 
 
@@ -190,13 +178,13 @@ always @(posedge clk_in) begin
 
         // clear tag 
         if ( rs_rdy == 1) begin
-            rob_alu_output[rs_tag_bus] <= up_alu_output ;
+            rob_ans_output[rs_tag_bus] <= up_alu_output ;
             rob_new_npc[rs_tag_bus] <= alu_npc ;
             rob_status[rs_tag_bus] <= 1 ;
         end
 
         if ( lsb_rdy == 1) begin
-            rob_lmd_output[lsb_tag_bus] <= up_lmd_output ;
+            rob_ans_output[lsb_tag_bus] <= up_lmd_output ;
             rob_status[lsb_tag_bus] <= 1 ;
         end
 

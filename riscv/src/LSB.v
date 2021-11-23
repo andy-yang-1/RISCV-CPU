@@ -19,27 +19,16 @@ module LSB (
 
     // from ROB (tag rs1)
     input wire ROB_rs1_valid ,
-    input wire ROB_rs1_mem_in_need ,
-    input wire [`ALUOutputBus] ROB_rs1_alu_output ,
-    input wire [`LMDOutputBus] ROB_rs1_lmd_output ,
+    input wire [`ALUOutputBus] ROB_rs1_ans_output ,
 
     // from ROB (tag rs2)
     input wire ROB_rs2_valid ,
-    input wire ROB_rs2_mem_in_need ,
-    input wire [`ALUOutputBus] ROB_rs2_alu_output ,
-    input wire [`LMDOutputBus] ROB_rs2_lmd_output ,
+    input wire [`ALUOutputBus] ROB_rs2_ans_output ,
 
     // from ROB (new commit line)
     input wire ROB_write_reg_rdy ,
     input wire [`RegValBus] ROB_write_val ,
     input wire [`ROBTagBus] ROB_head_tag ,
-
-    // from CDB
-    input wire [`ALUOutputBus] CDB_RS_alu_output ,
-    input wire [`ROBTagBus] CDB_RS_tag ,
-    input wire [`LMDOutputBus] CDB_LSB_lmd_output ,
-    input wire [`ROBTagBus] CDB_LSB_tag ,
-    input wire CDB_RS_rdy , // 自己的直接看 lsb_rdy 就行
 
     // from dispatch
     input wire dispatch_rdy ,
@@ -127,7 +116,7 @@ always @(posedge clk_in) begin
     $fdisplay(lsb_log,"head: %d rear: %d req_addr: %d LMDCollect: %d data_cnt: %d",head,rear,req_addr,LMDCollect,data_cnt) ;
 
     for ( i = 0 ; i < 16 ; i = i + 1 ) begin
-        $fdisplay(lsb_log,"i: %d inst: %d status: %d tag: %d rs1_rely: %d rs2_rely: %d rs2_val: %d",i,lsb_inst[i],lsb_status[i],lsb_tag[i],lsb_rs1_rely[i],lsb_rs2_rely[i],lsb_rs2_val[i]) ;
+        $fdisplay(lsb_log,"i: %d inst: %d status: %d tag: %d rs1_rely: %d rs1_val: %d rs2_rely: %d rs2_val: %d imme: %d",i,lsb_inst[i],lsb_status[i],lsb_tag[i],lsb_rs1_rely[i],lsb_rs1_val[i],lsb_rs2_rely[i],lsb_rs2_val[i],lsb_imme[i]) ;
     end
     $fdisplay(lsb_log,"<------------------------------->") ;
 
@@ -405,26 +394,6 @@ always @(posedge clk_in) begin
             // clear tag
             for ( i = 0 ; i < `LSB_SIZE ; i = i + 1 ) begin
             if ( lsb_status[i] == 2 ) begin
-                if ( lsb_rdy == 1 ) begin
-                    if ( lsb_rs1_rely[i] == CDB_LSB_tag && lsb_rs1_rely[i] != 0 ) begin
-                        lsb_rs1_rely[i] <= 0 ;
-                        lsb_rs1_val[i] <= CDB_LSB_lmd_output ;
-                    end
-                    if ( lsb_rs2_rely[i] == CDB_LSB_tag && lsb_rs2_rely[i] != 0 ) begin
-                        lsb_rs2_rely[i] <= 0 ;
-                        lsb_rs2_val[i] <= CDB_LSB_lmd_output ;
-                    end
-                end
-                if ( CDB_RS_rdy == 1) begin
-                    if ( lsb_rs1_rely[i] == CDB_RS_tag && lsb_rs1_rely[i] != 0 ) begin
-                        lsb_rs1_rely[i] <= 0 ;
-                        lsb_rs1_val[i] <= CDB_RS_alu_output ;
-                    end
-                    if ( lsb_rs2_rely[i] == CDB_RS_tag && lsb_rs2_rely[i] != 0 ) begin
-                        lsb_rs2_rely[i] <= 0 ;
-                        lsb_rs2_val[i] <= CDB_RS_alu_output ;
-                    end
-                end
                 if ( ROB_write_reg_rdy == 1  ) begin
                     if ( lsb_rs1_rely[i] == ROB_real_head_tag && lsb_rs1_rely[i] != 0) begin
                         lsb_rs1_rely[i] <= 0 ;
@@ -435,7 +404,7 @@ always @(posedge clk_in) begin
                         lsb_rs2_val[i] <= ROB_write_val ;
                     end
                 end
-                if ( (lsb_rs1_rely[i] == 0 ||( lsb_rdy == 1 && lsb_rs1_rely[i] == CDB_LSB_tag )|| ( CDB_RS_rdy == 1 && lsb_rs1_rely[i] == CDB_RS_tag ) || ( ROB_write_reg_rdy == 1 && lsb_rs1_rely[i] == ROB_real_head_tag)) && (lsb_rs2_rely[i] == 0 ||( lsb_rdy == 1 && lsb_rs2_rely[i] == CDB_LSB_tag )|| ( CDB_RS_rdy == 1 && lsb_rs2_rely[i] == CDB_RS_tag )|| ( ROB_write_reg_rdy == 1 && lsb_rs2_rely[i] == ROB_real_head_tag)) ) begin
+                if ( (lsb_rs1_rely[i] == 0 || ( ROB_write_reg_rdy == 1 && lsb_rs1_rely[i] == ROB_real_head_tag)) && (lsb_rs2_rely[i] == 0 || ( ROB_write_reg_rdy == 1 && lsb_rs2_rely[i] == ROB_real_head_tag)) ) begin
                     lsb_status[i] <= 1 ; // 表示 rs1 和 rs2 都清除了依赖关系
                 end
             end
@@ -451,43 +420,15 @@ always @(posedge clk_in) begin
                 lsb_rs2_rely[rear] <= rs2_rely ;
                 lsb_status[rear] <= 2 ;
             if ( rs1_rely != 0 ) begin
-                // CDB request
-                if ( lsb_rdy == 1 && rs1_rely == CDB_LSB_tag ) begin
-                    lsb_rs1_rely[rear] <= 0 ;
-                    lsb_rs1_val[rear] <= CDB_LSB_lmd_output ;
-                end
-                if ( CDB_RS_rdy == 1 && rs1_rely == CDB_RS_tag ) begin
-                    lsb_rs1_rely[rear] <= 0 ;
-                    lsb_rs1_val[rear] <= CDB_RS_alu_output ;
-                end
                 // ROB request
                 if ( ROB_rs1_valid == 1 ) begin
-                    lsb_rs1_val[rear] <= 0 ;
-                    if ( ROB_rs1_mem_in_need == 1 ) begin
-                        lsb_rs1_val[rear] <= ROB_rs1_lmd_output ;
-                    end else begin
-                        lsb_rs1_val[rear] <= ROB_rs1_alu_output ;
-                    end
+                    lsb_rs1_val[rear] <= ROB_rs1_ans_output ;
                 end
             end
             if ( rs2_rely != 0 ) begin
-                // CDB request
-                if ( lsb_rdy == 1 && rs2_rely == CDB_LSB_tag ) begin
-                    lsb_rs2_rely[rear] <= 0 ;
-                    lsb_rs2_val[rear] <= CDB_LSB_lmd_output ;
-                end
-                if ( CDB_RS_rdy == 1 && rs2_rely == CDB_RS_tag ) begin
-                    lsb_rs2_rely[rear] <= 0 ;
-                    lsb_rs2_val[rear] <= CDB_RS_alu_output ;
-                end
                 // ROB request
                 if ( ROB_rs2_valid == 1 ) begin
-                    lsb_rs2_val[rear] <= 0 ;
-                    if ( ROB_rs2_mem_in_need == 1 ) begin
-                        lsb_rs2_val[rear] <= ROB_rs2_lmd_output ;
-                    end else begin
-                        lsb_rs2_val[rear] <= ROB_rs2_alu_output ;
-                    end
+                    lsb_rs2_val[rear] <= ROB_rs2_ans_output ;
                 end
             end
             if ( rs1_rely == 0 && rs2_rely == 0 ) begin

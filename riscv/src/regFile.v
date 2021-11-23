@@ -38,8 +38,8 @@ module regFile (
 
 );
 
-reg [`RegValBus] all_reg [`RegBus] ;
-reg [`ROBTagBus] all_rely [`RegBus] ;
+reg [`RegValBus] all_reg [`RegBitSize-1:0] ;
+reg [`ROBTagBus] all_rely [`RegBitSize-1:0] ;
 
 integer i = 0 ;
 
