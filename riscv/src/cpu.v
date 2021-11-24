@@ -44,6 +44,7 @@ wire rs_rdy ;
 wire lsb_rdy ;
 
 wire ROB_LSB_enable_write ;
+wire ROB_LSB_enable_IO ;
 
 
 wire [`AddrBus] fetch_mem_addr ;
@@ -275,12 +276,14 @@ LSB LSB_part(
   .clk_in              (clk_in              ),
   .rdy_in              (rdy_in              ),
   .rst_in              (rst_in              ),
+  .io_buffer_full      (io_buffer_full      ),
   .rs1_val             (rs1_val             ),
   .rs1_rely            (rs1_rely            ),
   .rs2_val             (rs2_val             ),
   .rs2_rely            (rs2_rely            ),
   .next_tag            (next_tag            ),
   .enable_write        (ROB_LSB_enable_write        ),
+  .enable_IO           (ROB_LSB_enable_IO),
   .clear               (clear               ),
   .ROB_rs1_valid       (ROB_rs1_valid       ),
   .ROB_rs1_ans_output  (ROB_rs1_ans_output  ),
@@ -340,6 +343,7 @@ ROB ROB_part(
   .ROB_next_tag        (next_tag        ),
   .clear               (clear               ),
   .enable_write        (ROB_LSB_enable_write        ),
+  .enable_IO           (ROB_LSB_enable_IO),
   .ROB_rs1_valid       (ROB_rs1_valid       ),
   .ROB_rs1_ans_output  (ROB_rs1_ans_output  ),
   .ROB_rs2_valid       (ROB_rs2_valid       ),

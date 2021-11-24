@@ -33,6 +33,7 @@ module ROB (
     output wire[`ROBTagBus] ROB_next_tag ,
     output reg clear ,
     output reg enable_write , // 传给 LSB 允许写入
+    output reg enable_IO , // 允许 IO 读入
 
     // to RS & LSB tag1
     output wire ROB_rs1_valid ,
@@ -75,6 +76,8 @@ reg [`RegBus] rob_rd[`ROB_SIZE:0] ;
 // reg [`LMDOutputBus] rob_lmd_output[`ROB_SIZE:0] ;
 reg [`ALUOutputBus] rob_ans_output[`ROB_SIZE:0] ;
 
+reg IO_wait ;
+
 assign rob_size_cnt = (rob_status[1] > 0) + (rob_status[2] > 0) + (rob_status[3]>0) + (rob_status[4]>0) + (rob_status[5] > 0) + (rob_status[6] > 0) + (rob_status[7] > 0) + (rob_status[8]>0) + (rob_status[9]>0) + (rob_status[10] > 0) + (rob_status[11] > 0) + (rob_status[12] > 0) + (rob_status[13]>0) + (rob_status[14]>0) + (rob_status[15]>0) + (rob_status[16] > 0)  ;
 assign rear = (( head + rob_size_cnt ) <= 16) ? head + rob_size_cnt : head + rob_size_cnt - 16 ; 
 
@@ -107,6 +110,7 @@ always @(posedge clk_in) begin
     to_rd <= 0 ;
     to_pc <= 0 ;
     enable_write <= 0 ;
+    enable_IO <= 0 ;
     commit_pulse <= 0 ;
 
 `ifdef debug_show
@@ -128,6 +132,7 @@ always @(posedge clk_in) begin
 
         head <= 1 ;
         commit_pulse <= 0 ;
+        IO_wait <= 0 ;
         
         for ( i = 0 ; i <= `ROB_SIZE ; i = i + 1 ) begin
             rob_inst[i] <= 0 ;
@@ -144,6 +149,7 @@ always @(posedge clk_in) begin
         if ( rob_status[head] == 1 ) begin
 
             commit_pulse <= 1 ;
+            IO_wait <= 0 ;
 
             if ( rob_rd[head] != 0 ) begin
                 write_rdy <= 1 ;
@@ -175,6 +181,12 @@ always @(posedge clk_in) begin
                 to_pc <= rob_new_npc[head] ;
                 commit_pulse <= 1 ;
         end // 不需要状态就可以 commit 
+
+        // todo settle IO read here
+        if ( ( rob_inst[head] == `Instlb || rob_inst[head] == `Instlh || rob_inst[head] == `Instlw || rob_inst[head] == `Instlbu || rob_inst[head] == `Instlhu) && rob_status[head] == 2 && lsb_rdy == 0 && IO_wait == 0 ) begin
+            IO_wait <= 1 ; 
+            enable_IO <= 1 ; 
+        end
 
         // clear tag 
         if ( rs_rdy == 1) begin

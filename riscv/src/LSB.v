@@ -5,6 +5,7 @@ module LSB (
     input wire clk_in ,
     input wire rdy_in ,
     input wire rst_in ,
+    input wire io_buffer_full ,
 
     // from register 
     input wire [`RegValBus] rs1_val , 
@@ -15,6 +16,7 @@ module LSB (
     // from ROB (new tag)
     input wire [`ROBTagBus] next_tag ,
     input wire enable_write , // LSB 和 ROB 顶端同时为 S 操作时的 commit 请求
+    input wire enable_IO ,
     input wire clear ,
 
     // from ROB (tag rs1)
@@ -156,6 +158,8 @@ always @(posedge clk_in) begin
             end
         end else if( enable_write == 1 ) begin
             lsb_status[next_commit] <= 3 ; // 使下一位标号
+        end else if ( enable_IO == 1 && lsb_rs1_val[head] + lsb_imme[head] >= 196608 ) begin
+            lsb_status[head] <= 3 ; 
         end
         if ( clear == 0 || lsb_status[head] == 3 ) begin
             if ( data_cnt > 0 ) begin // 执行结束停一个 clk 简化电路 (有提升空间)
@@ -345,16 +349,9 @@ always @(posedge clk_in) begin
                 endcase 
             end else begin // issue
 
-// `ifdef debug_show  
-
-//             $display("head: %d rear: %d lsb_inst[head]: %d lsb_status[head]: %d data_cnt: %d",head,rear,req_addr,LMDCollect,data_cnt) ;
-
-// `endif            
-
                 if ( lsb_status[head] == 1 ) begin                   
                    
-                   if (lsb_inst[head] == `Instlb || lsb_inst[head] == `Instlh || lsb_inst[head] == `Instlw || lsb_inst[head] == `Instlbu || lsb_inst[head] == `Instlhu) begin
-                        
+                   if ((lsb_inst[head] == `Instlb || lsb_inst[head] == `Instlh || lsb_inst[head] == `Instlw || lsb_inst[head] == `Instlbu || lsb_inst[head] == `Instlhu) && lsb_rs1_val[head] + lsb_imme[head] < 196608 ) begin
                         mem_wr <= 0 ;
                         LSB_mem_in_need <= 1 ;
                         req_addr <= lsb_rs1_val[head] + lsb_imme[head] ;
@@ -369,21 +366,31 @@ always @(posedge clk_in) begin
 
                    end 
                 end
-                if ( lsb_status[head] == 3 ) begin
-                    mem_wr <= 1 ;
+                if ( lsb_status[head] == 3 && io_buffer_full == 0 ) begin // settle IO here
+                    mem_wr <= 0 ;
                     LSB_mem_in_need <= 1 ;
                     req_addr <= lsb_rs1_val[head] + lsb_imme[head] ;
                     LMDCollect <= lsb_rs2_val[head] ;
                     case (lsb_inst[head])
+                        // IO read
+                        `Instlb: data_cnt <= 2 ;
+                        `Instlh: data_cnt <= 3 ;
+                        `Instlw: data_cnt <= 5 ;
+                        `Instlbu: data_cnt <= 2 ;
+                        `Instlhu: data_cnt <= 3 ;
+                        // write
                         `Instsb: begin 
+                            mem_wr <= 1 ;
                             data_cnt <= 1 ;
                             write_data <= lsb_rs2_val[head][7:0] ;
                         end
                         `Instsh: begin
+                            mem_wr <= 1 ;
                             data_cnt <= 2 ;
                             write_data <= lsb_rs2_val[head][7:0] ;
                         end
                         `Instsw: begin
+                            mem_wr <= 1 ;
                             data_cnt <= 4 ;
                             write_data <= lsb_rs2_val[head][7:0] ;
                         end
