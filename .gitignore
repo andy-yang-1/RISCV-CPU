@@ -1,0 +1,7 @@
+
+*.vcd
+riscv/src/cpu_run
+riscv/src/lsb_log.txt
+riscv/src/out.txt
+riscv/src/rob_log.txt
+riscv/src/rs_log.txt
