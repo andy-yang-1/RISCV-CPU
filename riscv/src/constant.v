@@ -2,7 +2,7 @@
 
 //`define debug_show
 //`define partial_show    120000
-//`define I_cache_added
+`define I_cache_added
 
 `define AddrBus         31:0
 `define InstBus         31:0 

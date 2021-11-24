@@ -63,7 +63,7 @@ always @(*) begin
             `Instsub: to_alu_output = up_rs1_val - up_rs2_val ;
             `Instsll: to_alu_output = up_rs1_val << up_rs2_val ;
             `Instslt: to_alu_output = $signed(up_rs1_val) < $signed(up_rs2_val) ;
-            `Instsltu: to_alu_output = $signed(up_rs1_val) - up_rs2_val ;
+            `Instsltu: to_alu_output = $signed(up_rs1_val) < up_rs2_val ;
             `Instxor: to_alu_output = up_rs1_val ^ up_rs2_val ;
             `Instsrl: to_alu_output = $signed(up_rs1_val) >> up_rs2_val ; // todo 不知道这里有没有 signed 的必要
             `Instsra: to_alu_output = $signed(up_rs1_val) >> $signed(up_rs2_val) ;
