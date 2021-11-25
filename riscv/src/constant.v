@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 //`define debug_show
-//`define partial_show    20000
+//`define partial_show    120000
 `define I_cache_added
 
 `define AddrBus         31:0
@@ -13,6 +13,7 @@
 `define LMDOutputBus    31:0
 `define ByteBus         7:0
 `define ROBTagBus       4:0
+`define PredictorBus    1:0
 `define RegBitSize      32
 `define RS_SIZE         16
 `define LSB_SIZE        16

@@ -55,6 +55,9 @@ wire [`InstBus] fetch_decode_inst ;
 wire [`AddrBus] fetch_decode_npc ;
 wire fetch_dispatch_rdy ;
 
+wire predictor_fetch ;
+wire[1:0] jump_failed = {1'b0,clear} ;
+
 wire [`ByteBus] LSB_mem_write_data ;
 wire LSB_mem_wr ;
 wire LSB_mem_in_need ;
@@ -77,6 +80,7 @@ fetch fetch_part(
 
   .mem_rdy(mem_fetch_rdy),
   .mem_byte(mem_byte),
+  .predict_jump(predictor_fetch),
   .req_addr(fetch_mem_addr),
 
   .fetch_rdy(fetch_dispatch_rdy),
@@ -356,6 +360,17 @@ ROB ROB_part(
   .to_pc               (ROB_fetch_next_pc               ),
   .ROB_FULL            (ROB_FULL            )
 );
+
+predictor predictor_part(
+  .clk_in       (clk_in       ),
+  .rdy_in       (rdy_in       ),
+  .rst_in       (rst_in       ),
+  .up_npc       (dispatch_down_npc       ),
+  .rob_npc      (ROB_fetch_next_pc      ),
+  .jump_failed (jump_failed ),
+  .predict_jump (predictor_fetch )
+);
+
 
 
 `ifdef partial_show

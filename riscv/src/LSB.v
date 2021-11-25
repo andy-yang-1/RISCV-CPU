@@ -82,6 +82,7 @@ reg [`RegValBus] lsb_rs2_val[`LSB_SIZE-1:0] ;
 reg [`ROBTagBus] lsb_rs2_rely[`LSB_SIZE:0] ;
 
 reg last_full ;
+reg last_write ;
 
 assign lsb_size_cnt = (lsb_status[0] > 0) + (lsb_status[1] > 0) + (lsb_status[2] > 0) + (lsb_status[3]>0) + (lsb_status[4]>0) + (lsb_status[5] > 0) + (lsb_status[6] > 0) + (lsb_status[7] > 0) + (lsb_status[8]>0) + (lsb_status[9]>0) + (lsb_status[10] > 0) + (lsb_status[11] > 0) + (lsb_status[12] > 0) + (lsb_status[13]>0) + (lsb_status[14]>0) + (lsb_status[15]>0) ;
 assign commit_size_cnt = (lsb_status[0] == 3) + (lsb_status[1] == 3) + (lsb_status[2] == 3) + (lsb_status[3]== 3) + (lsb_status[4]== 3) + (lsb_status[5] == 3) + (lsb_status[6] == 3) + (lsb_status[7]== 3) + (lsb_status[8]== 3) + (lsb_status[9]== 3) + (lsb_status[10] == 3) + (lsb_status[11] == 3) + (lsb_status[12]== 3) + (lsb_status[13]== 3) + (lsb_status[14]== 3) + (lsb_status[15]== 3) ;
@@ -111,6 +112,7 @@ always @(posedge clk_in) begin
     lsb_rdy <= 0 ;
     to_tag_bus <= 0 ;
     to_lmd_output <= 0 ;
+    last_write <= 0 ;
 
 `ifdef debug_show
 
@@ -389,6 +391,7 @@ always @(posedge clk_in) begin
                             mem_wr <= 1 ;
                             data_cnt <= 1 ;
                             write_data <= lsb_rs2_val[head][7:0] ;
+                            last_write <= 1 ;
                         end
                         `Instsh: begin
                             mem_wr <= 1 ;
@@ -405,7 +408,7 @@ always @(posedge clk_in) begin
             end
             end else begin
                 last_full <= 1 ;
-                if ( last_full == 0 ) begin
+                if ( last_full == 0 && last_write == 1 ) begin
                     lsb_rdy <= 0 ;
                     lsb_status[(head+15)%16] <= 3 ;
                     head <= ( head + 15 ) % 16 ;

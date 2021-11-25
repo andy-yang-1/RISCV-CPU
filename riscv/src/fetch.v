@@ -22,6 +22,9 @@ module fetch (
     input wire mem_rdy ,
     input wire [`ByteBus] mem_byte ,
 
+    // from predictor 
+    input wire predict_jump ,
+
     // to MEM
     output reg[`AddrBus] req_addr ,
 
@@ -43,6 +46,8 @@ reg last_valid ; // 记录上一个周期请求是否成功，成功就写入 Co
 reg[`AddrBus] cache_addr[`I_cache_size-1:0] ;
 reg[`InstBus] I_cache_Inst[`I_cache_size-1:0] ;
 
+integer i ;
+
 always @(posedge clk_in) begin
     if ( rst_in == 1 ) begin
         req_addr <= 0 ;
@@ -54,10 +59,15 @@ always @(posedge clk_in) begin
         InstCollect <= 0 ;
         last_valid <= 0 ; // cache addr 不应该清 0 将他当成 dirty
 
+        for ( i = 0 ; i < `I_cache_size ; i = i + 1) begin
+            cache_addr[i] <= 0 ;
+            I_cache_Inst[i] <= 0 ;
+        end
+
     end else if ( rdy_in == 1 ) begin
     
         fetch_rdy <= 0 ;
-        if ( change_pc == 1 ) begin
+        if ( change_pc == 1 || predict_jump == 1 ) begin
             inst_cnt <= 0 ;
             pc <= next_pc ;
             req_addr <= next_pc ;
