@@ -362,8 +362,9 @@ ROB ROB_part(
 
 always @(posedge clk_in) begin
 
-  if ( $time > `partial_show )
+  if ( $time > `partial_show ) begin
     $finish ;
+  end
   // if ( ($time % `partial_show) == 1 ) begin
   //   $display("time: %d",$time);
   // end

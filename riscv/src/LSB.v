@@ -81,6 +81,8 @@ reg [`ROBTagBus] lsb_rs1_rely[`LSB_SIZE-1:0] ;
 reg [`RegValBus] lsb_rs2_val[`LSB_SIZE-1:0] ;
 reg [`ROBTagBus] lsb_rs2_rely[`LSB_SIZE:0] ;
 
+reg last_full ;
+
 assign lsb_size_cnt = (lsb_status[0] > 0) + (lsb_status[1] > 0) + (lsb_status[2] > 0) + (lsb_status[3]>0) + (lsb_status[4]>0) + (lsb_status[5] > 0) + (lsb_status[6] > 0) + (lsb_status[7] > 0) + (lsb_status[8]>0) + (lsb_status[9]>0) + (lsb_status[10] > 0) + (lsb_status[11] > 0) + (lsb_status[12] > 0) + (lsb_status[13]>0) + (lsb_status[14]>0) + (lsb_status[15]>0) ;
 assign commit_size_cnt = (lsb_status[0] == 3) + (lsb_status[1] == 3) + (lsb_status[2] == 3) + (lsb_status[3]== 3) + (lsb_status[4]== 3) + (lsb_status[5] == 3) + (lsb_status[6] == 3) + (lsb_status[7]== 3) + (lsb_status[8]== 3) + (lsb_status[9]== 3) + (lsb_status[10] == 3) + (lsb_status[11] == 3) + (lsb_status[12]== 3) + (lsb_status[13]== 3) + (lsb_status[14]== 3) + (lsb_status[15]== 3) ;
 assign rear = ( head + lsb_size_cnt ) % 16 ; 
@@ -142,6 +144,7 @@ always @(posedge clk_in) begin
         data_cnt <= 0 ; // 指需要等待的 byte 数
         LMDCollect <= 0 ;
         head <= 0 ;
+        last_full <= 0 ;
 
     end else if( rdy_in == 1 ) begin
         if ( clear == 1 ) begin
@@ -158,10 +161,13 @@ always @(posedge clk_in) begin
             end
         end else if( enable_write == 1 ) begin
             lsb_status[next_commit] <= 3 ; // 使下一位标号
-        end else if ( enable_IO == 1 && lsb_rs1_val[head] + lsb_imme[head] >= 196608 ) begin
-            lsb_status[head] <= 3 ; 
+        end else if ( enable_IO == 1 && lsb_rs1_val[next_commit] + lsb_imme[next_commit] >= 196608 ) begin
+            lsb_status[next_commit] <= 3 ; 
         end
         if ( clear == 0 || lsb_status[head] == 3 ) begin
+
+            if ( io_buffer_full == 0 ) begin
+            last_full <= 0 ;
             if ( data_cnt > 0 ) begin // 执行结束停一个 clk 简化电路 (有提升空间)
                 case (lsb_inst[head])
                     `Instlb: begin
@@ -366,7 +372,7 @@ always @(posedge clk_in) begin
 
                    end 
                 end
-                if ( lsb_status[head] == 3 && io_buffer_full == 0 ) begin // settle IO here
+                if ( lsb_status[head] == 3 ) begin // settle IO here
                     mem_wr <= 0 ;
                     LSB_mem_in_need <= 1 ;
                     req_addr <= lsb_rs1_val[head] + lsb_imme[head] ;
@@ -395,6 +401,14 @@ always @(posedge clk_in) begin
                             write_data <= lsb_rs2_val[head][7:0] ;
                         end
                     endcase
+                end
+            end
+            end else begin
+                last_full <= 1 ;
+                if ( last_full == 0 ) begin
+                    lsb_rdy <= 0 ;
+                    lsb_status[(head+15)%16] <= 3 ;
+                    head <= ( head + 15 ) % 16 ;
                 end
             end
 
