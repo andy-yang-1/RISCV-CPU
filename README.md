@@ -2,7 +2,7 @@
 
 _实际上是 white snake（速度：D）_ 
 
-<img src="C:\Users\andy_yang\AppData\Roaming\Typora\typora-user-images\image-20211125215541082.png" alt="image-20211125215541082" style="zoom:50%;" />
+<img src="./graph/image-20211125215541082.png" alt="image-20211125215541082" style="zoom:50%;" />
 
 
 
@@ -21,7 +21,7 @@ _实际上是 white snake（速度：D）_
 
 ## 电路设计图
 
-<img src="C:\Users\andy_yang\AppData\Roaming\Typora\typora-user-images\image-20211125220320356.png" alt="image-20211125220320356" style="zoom:33%;" />
+<img src="./graph/image-20211125220320356.png" alt="image-20211125220320356" style="zoom:33%;" />
 
 
 
